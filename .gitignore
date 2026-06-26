@@ -1,4 +1,5 @@
 # OS / IDE
+.cargo/
 .DS_Store
 Thumbs.db
 .vscode/
