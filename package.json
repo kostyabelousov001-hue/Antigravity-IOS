@@ -1,0 +1,25 @@
+{
+  "name": "user",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@mediapipe/tasks-genai": "^0.10.27",
+    "@modelcontextprotocol/sdk": "^1.25.3",
+    "axios": "^1.13.2",
+    "llm-checker": "^3.5.12",
+    "minecraft-data": "^3.102.3",
+    "mineflayer": "^4.33.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "undici": "^7.16.0",
+    "vec3": "^0.1.10"
+  }
+}

@@ -1,0 +1,78 @@
+name: Build Sideloadable iOS App (IPA)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build Unsigned IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: 20
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'antigravity-ios/package-lock.json'
+
+      - name: Install Node Dependencies
+        working-directory: ./antigravity-ios
+        run: |
+          npm ci || npm install
+
+      - name: Set up Ruby & CocoaPods
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Prebuild iOS project via Expo
+        working-directory: ./antigravity-ios
+        run: |
+          npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: ./antigravity-ios/ios
+        run: |
+          pod install
+
+      - name: Compile Unsigned iOS App (.app)
+        working-directory: ./antigravity-ios/ios
+        run: |
+          xcodebuild -workspace *.xcworkspace \
+            -scheme "AntigravityiOS" \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES
+
+      - name: Package compiled .app into IPA
+        working-directory: ./antigravity-ios/ios
+        run: |
+          mkdir -p Payload
+          # Locate built app in build folder
+          APP_PATH=$(find build/Build/Products/Release-iphoneos/ -name "*.app" | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
+          zip -r Antigravity.ipa Payload
+          mv Antigravity.ipa ../../
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Antigravity-iOS-Sideload
+          path: Antigravity.ipa
+          if-no-files-found: error
